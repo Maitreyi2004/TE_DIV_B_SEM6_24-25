@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Sentiment</title>
+</head>
+<body>
+    <h1>Prediction App</h1>
+
+    <!-- Section for Single Sentence Prediction -->
+    <h2>Single Sentence Prediction</h2>
+    <input type="text" id="sentenceInput" placeholder="Enter a sentence...">
+    <button onclick="predictSentence()">Predict</button>
+    <p id="singlePredictionResult"></p>
+
+    <!-- Section for CSV File Prediction -->
+    <h2>Bulk CSV Prediction</h2>
+    <input type="file" id="csvFileInput" accept=".csv">
+    <button onclick="predictCSV()">Predict from CSV</button>
+    <p id="csvPredictionResult"></p>
+
+    <script>
+        // Function for predicting a single sentence
+        function predictSentence() {
+            var sentence = document.getElementById('sentenceInput').value.trim();
+            if (sentence === "") {
+                alert("Please enter a sentence.");
+                return;
+            }
+
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 'text': sentence })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('singlePredictionResult').innerText = 'Error: ' + data.error;
+                } else {
+                    document.getElementById('singlePredictionResult').innerText = 'Prediction: ' + data.predictions[0];
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Function for predicting from a CSV file
+        function predictCSV() {
+            var csvFile = document.getElementById('csvFileInput').files[0];
+            if (!csvFile) {
+                alert("Please select a CSV file.");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('file', csvFile);
+
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('csvPredictionResult').innerText = 'Error: ' + data.error;
+                } else {
+                    document.getElementById('csvPredictionResult').innerText = 'Predictions: ' + data.predictions.join(', ');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
